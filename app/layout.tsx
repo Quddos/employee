@@ -17,7 +17,8 @@ export const metadata: Metadata = {
   description:
     "Upload the WA_Fn-UseC_-HR-Employee-Attrition dataset, explore attrition insights, and craft personalized retention strategies with Gemini.",
   icons: {
-    icon: "/icon.svg",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
   },
 };
 
