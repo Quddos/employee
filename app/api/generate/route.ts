@@ -15,6 +15,11 @@ type GeneratePayload = {
   };
 };
 
+type StrategyResponse = {
+  strategy: string;
+  model: string;
+};
+
 const buildPrompt = (employee: Record<string, unknown>, analysis: NonNullable<GeneratePayload["analysis"]>): string => {
   const { summary, similar } = analysis;
   const summaryLines = [
@@ -67,6 +72,20 @@ Produce 3 concise, high-leverage retention strategies. Each strategy must:
 Return the response as a numbered list (1., 2., 3.). Limit each strategy to at most 6 lines.`;
 };
 
+const MODEL_FALLBACK_CHAIN = ["gemini-1.5-flash-latest", "gemini-1.5-flash-8b", "gemini-1.5-pro", "gemini-1.0-pro"];
+
+const normalizeErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return "Unexpected error occurred while contacting Gemini.";
+};
+
+const isModelNotFound = (error: unknown): boolean => {
+  if (!(error instanceof Error)) return false;
+  return /404/.test(error.message) && /model/i.test(error.message);
+};
+
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as GeneratePayload;
@@ -84,39 +103,71 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        temperature: 0.25,
-        topP: 0.8,
-        maxOutputTokens: 768,
-      },
-      safetySettings: [],
-      systemInstruction:
-        "You are an expert HR business partner. You focus on retention outcomes, quantify impact, and keep answers pragmatic.",
-    });
+    const preferredModel = process.env.GEMINI_MODEL?.trim();
+    const modelCandidates = Array.from(
+      new Set([preferredModel, ...MODEL_FALLBACK_CHAIN].filter((model): model is string => Boolean(model))),
+    );
 
     const prompt = buildPrompt(employee, analysis);
+    const genAI = new GoogleGenerativeAI(apiKey);
 
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: prompt }],
-        },
-      ],
-      generationConfig: {
-        responseMimeType: "text/plain",
-      },
-    });
+    let lastError: unknown = null;
 
-    const text = result.response.text();
+    for (const modelName of modelCandidates) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: {
+            temperature: 0.25,
+            topP: 0.8,
+            maxOutputTokens: 768,
+          },
+          safetySettings: [],
+          systemInstruction:
+            "You are an expert HR business partner. You focus on retention outcomes, quantify impact, and keep answers pragmatic.",
+        });
 
-    return NextResponse.json({ strategy: text });
+        const result = await model.generateContent({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            responseMimeType: "text/plain",
+          },
+        });
+
+        const text = result.response.text();
+        const payload: StrategyResponse = {
+          strategy: text,
+          model: modelName,
+        };
+
+        return NextResponse.json(payload);
+      } catch (error) {
+        lastError = error;
+        if (isModelNotFound(error)) {
+          // Try next candidate.
+          continue;
+        }
+
+        console.error("[api/generate] error", error);
+        const message = normalizeErrorMessage(error);
+        return NextResponse.json({ error: message }, { status: 502 });
+      }
+    }
+
+    const message = `Gemini model unavailable. Set GEMINI_MODEL to a supported value (e.g. "gemini-1.5-flash-latest") or verify access in Google AI Studio. ${
+      lastError ? `Last error: ${normalizeErrorMessage(lastError)}` : ""
+    }`.trim();
+
+    console.error("[api/generate] error", lastError);
+    return NextResponse.json({ error: message }, { status: 502 });
   } catch (error) {
     console.error("[api/generate] error", error);
-    return NextResponse.json({ error: "Unable to generate retention strategies." }, { status: 500 });
+    return NextResponse.json({ error: normalizeErrorMessage(error) }, { status: 500 });
   }
 }
 

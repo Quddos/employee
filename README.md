@@ -21,6 +21,8 @@ Create an `.env.local` in the project root:
 
 ```
 GOOGLE_API_KEY=your-google-gemini-api-key
+# Optional: override the default Gemini model (falls back to gemini-1.5-flash-latest, then others)
+# GEMINI_MODEL=gemini-1.5-flash
 ```
 
 Restart the dev server after adding or changing environment variables.
