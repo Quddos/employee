@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## HR Analytics & Retention Strategy App
 
-## Getting Started
+Full-stack Next.js (App Router) demo for exploring the Kaggle **WA_Fn-UseC_-HR-Employee-Attrition** dataset, surfacing attrition insights for any employee, and generating targeted retention actions with Google Gemini.
 
-First, run the development server:
+### Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Upload any attrition CSV (header row required) or load the bundled sample dataset.
+- Search/filter to find an employee and trigger server-side similarity analysis.
+- `/api/analyze` computes dataset stats, attrition by department, and k-nearest numeric neighbors.
+- `/api/generate` crafts a structured prompt and calls Gemini (`@google/generative-ai`) for 3 actionable retention strategies.
+- Frontend presents summaries, similar employees, and Gemini guidance in a clean, responsive layout.
+
+### Prerequisites
+
+- Node.js 18+
+- A Google AI Studio API key with access to Gemini models.
+
+### Environment
+
+Create an `.env.local` in the project root:
+
+```
+GOOGLE_API_KEY=your-google-gemini-api-key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Restart the dev server after adding or changing environment variables.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Install & Run
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+npm install
+npm run dev
+```
 
-## Learn More
+Visit `http://localhost:3000` and either upload your CSV or press **Load sample dataset** to explore immediately.
 
-To learn more about Next.js, take a look at the following resources:
+### API Verification
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `POST /api/analyze` with `{ dataset, index }` returns summary, employee payload, and similar matches.
+- `POST /api/generate` with `{ employee, analysis }` invokes Gemini (`gemini-1.5-flash`) and returns strategy text.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Deployment
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The app is ready for Vercel. Set `GOOGLE_API_KEY` in project environment variables and redeploy. No database required for the current flow. Optional future upgrades include caching analyses or storing strategy history in Neon/Postgres.
