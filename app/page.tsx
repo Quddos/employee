@@ -187,13 +187,19 @@ export default function HomePage() {
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ employee: analysis.employee, analysis }),
-      });
+      body: JSON.stringify({ employee: analysis.employee, analysis }),
+    });
 
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload.error || 'Failed to generate strategies.');
+        const attempts =
+          Array.isArray(payload.attempts) && payload.attempts.length
+            ? ` Attempts tried: ${payload.attempts
+                .map((entry: { model: string; message: string }) => `${entry.model} (${entry.message})`)
+                .join(' → ')}.`
+            : '';
+        throw new Error(`${payload.error || 'Failed to generate strategies.'}${attempts}`);
       }
 
       setStrategies(payload.strategy ?? '');
@@ -236,7 +242,7 @@ export default function HomePage() {
             <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-slate-600 hover:border-slate-400 hover:text-slate-800">
               <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
               <span>Upload CSV</span>
-            </label>
+        </label>
             <button
               type="button"
               onClick={loadSampleDataset}
@@ -266,10 +272,10 @@ export default function HomePage() {
                           <th key={key} className="px-3 py-2">
                             {key}
                           </th>
-                        ))}
-                    </tr>
-                  </thead>
-                  <tbody>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
                     {previewRows.map((row, rowIndex) => (
                       <tr key={rowIndex} className="odd:bg-white even:bg-slate-50">
                         <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-600">{rowIndex}</td>
@@ -279,12 +285,12 @@ export default function HomePage() {
                             <td key={key} className="px-3 py-2 text-slate-600">
                               {String(value ?? '')}
                             </td>
-                          ))}
-                      </tr>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
             </div>
           )}
         </section>
@@ -294,7 +300,7 @@ export default function HomePage() {
           <div className="grid gap-4 md:grid-cols-[2fr,1fr]">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <input
+              <input
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
                   placeholder="Search by role, department, or employee number…"
@@ -372,7 +378,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {analysis && (
+      {analysis && (
           <section className="grid gap-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <header className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-xl font-semibold text-slate-900">3. Insights</h2>
@@ -410,9 +416,9 @@ export default function HomePage() {
                       <span className="font-medium">{department.department}</span>
                       <span>{formatPercent(department.attritionRate)} · {department.count} employees</span>
                     </li>
-                  ))}
-                </ul>
-              </div>
+            ))}
+          </ul>
+          </div>
 
               <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-4 shadow-sm">
                 <h3 className="text-sm font-semibold text-indigo-900">Most similar employees</h3>
@@ -423,18 +429,11 @@ export default function HomePage() {
                       <span className="truncate">
                         dist {entry.distance.toFixed(3)} · Attrition: {String(entry.row?.Attrition ?? entry.row?.attrition ?? 'N/A')}
                       </span>
-                    </li>
-                  ))}
-                </ol>
+                </li>
+              ))}
+            </ol>
               </div>
-            </div>
-
-            <div className="grid gap-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-inner">
-              <h3 className="text-sm font-semibold text-slate-800">Employee payload sent to Gemini</h3>
-              <pre className="max-h-72 overflow-auto rounded-lg bg-slate-900/95 px-4 py-3 text-sm text-slate-100 shadow-inner">
-                {JSON.stringify(analysis.employee, null, 2)}
-              </pre>
-            </div>
+          </div>
 
             <div className="flex justify-end">
               <button
@@ -445,19 +444,19 @@ export default function HomePage() {
               >
                 {isGenerating ? 'Generating with Gemini…' : 'Generate retention strategies'}
               </button>
-            </div>
-          </section>
-        )}
+          </div>
+        </section>
+      )}
 
         {strategies && (
           <section className="grid gap-4 rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 via-slate-50 to-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-indigo-900">4. Gemini recommendations</h2>
             <div className="whitespace-pre-wrap rounded-xl border border-indigo-100 bg-white/90 px-4 py-4 text-sm leading-relaxed text-slate-800 shadow-inner">
               {strategies}
-            </div>
-          </section>
-        )}
-      </div>
+          </div>
+        </section>
+      )}
+    </div>
     </main>
   );
 }

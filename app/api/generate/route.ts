@@ -72,7 +72,16 @@ Produce 3 concise, high-leverage retention strategies. Each strategy must:
 Return the response as a numbered list (1., 2., 3.). Limit each strategy to at most 6 lines.`;
 };
 
-const MODEL_FALLBACK_CHAIN = ["gemini-1.5-flash-latest", "gemini-1.5-flash-8b", "gemini-1.5-pro", "gemini-1.0-pro"];
+const MODEL_FALLBACK_CHAIN = [
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-exp",
+  "gemini-1.5-flash-latest",
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-8b",
+  "gemini-1.5-pro",
+  "gemini-pro",
+  "gemini-1.0-pro-latest",
+];
 
 const normalizeErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {
@@ -112,6 +121,7 @@ export async function POST(request: NextRequest) {
     const genAI = new GoogleGenerativeAI(apiKey);
 
     let lastError: unknown = null;
+    const attemptErrors: Array<{ model: string; message: string }> = [];
 
     for (const modelName of modelCandidates) {
       try {
@@ -148,6 +158,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(payload);
       } catch (error) {
         lastError = error;
+        attemptErrors.push({ model: modelName, message: normalizeErrorMessage(error) });
         if (isModelNotFound(error)) {
           // Try next candidate.
           continue;
@@ -155,7 +166,7 @@ export async function POST(request: NextRequest) {
 
         console.error("[api/generate] error", error);
         const message = normalizeErrorMessage(error);
-        return NextResponse.json({ error: message }, { status: 502 });
+        return NextResponse.json({ error: message, attempts: attemptErrors }, { status: 502 });
       }
     }
 
@@ -164,7 +175,7 @@ export async function POST(request: NextRequest) {
     }`.trim();
 
     console.error("[api/generate] error", lastError);
-    return NextResponse.json({ error: message }, { status: 502 });
+    return NextResponse.json({ error: message, attempts: attemptErrors }, { status: 502 });
   } catch (error) {
     console.error("[api/generate] error", error);
     return NextResponse.json({ error: normalizeErrorMessage(error) }, { status: 500 });
