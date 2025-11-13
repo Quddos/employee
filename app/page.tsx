@@ -456,7 +456,7 @@ export default function HomePage() {
                 disabled={isGenerating}
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition enabled:hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
-                {isGenerating ? 'Generating with XAI, AI, HRM…' : 'Generate retention strategies'}
+                {isGenerating ? 'Generating with XAI, AI, HRM...' : 'Generate retention strategies'}
               </button>
           </div>
         </section>
