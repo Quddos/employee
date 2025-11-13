@@ -30,6 +30,13 @@ type StatusState = {
   tone: StatusTone;
 };
 
+type StrategyItem = {
+  order: number;
+  label: string;
+  lines: string[];
+  score: number;
+};
+
 const statusToneStyles: Record<StatusTone, string> = {
   info: 'border-sky-200 bg-sky-50 text-sky-800',
   success: 'border-emerald-200 bg-emerald-50 text-emerald-800',
@@ -54,6 +61,7 @@ export default function HomePage() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [strategies, setStrategies] = useState<string | null>(null);
+  const [strategyItems, setStrategyItems] = useState<StrategyItem[] | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [status, setStatus] = useState<StatusState | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -90,6 +98,7 @@ export default function HomePage() {
   const resetState = useCallback(() => {
     setAnalysis(null);
     setStrategies(null);
+    setStrategyItems(null);
     setStatus(null);
   }, []);
 
@@ -181,7 +190,7 @@ export default function HomePage() {
     }
 
     setIsGenerating(true);
-    updateStatus('Requesting retention strategies from Gemini…');
+    updateStatus('Requesting retention strategies from AI…');
 
     try {
       const response = await fetch('/api/generate', {
@@ -202,9 +211,14 @@ export default function HomePage() {
         throw new Error(`${payload.error || 'Failed to generate strategies.'}${attempts}`);
       }
 
-      setStrategies(payload.strategy ?? '');
+      const rawStrategy = payload.strategy ?? '';
+      const cleanedStrategy = rawStrategy.replace(/\*\*/g, '');
+      const items = parseStrategies(cleanedStrategy);
+
+      setStrategies(cleanedStrategy);
+      setStrategyItems(items.length ? items : null);
       updateStatus(
-        payload.model ? `Gemini response generated with ${payload.model}.` : 'Gemini response received.',
+        payload.model ? `XAI response generated with ${payload.model}.` : 'AI response received.',
         'success',
       );
     } catch (error) {
@@ -229,10 +243,10 @@ export default function HomePage() {
           <span className="inline-flex items-center gap-2 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold tracking-wide text-sky-700">
             HR analytics · retention strategy
           </span>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">HR Analytics & Retention Co-Pilot</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Employee Retention Strategies and Analysis Platform Co-Pilot</h1>
           <p className="max-w-3xl text-base text-slate-600">
-            Upload the <em>WA_Fn-UseC_-HR-Employee-Attrition</em> dataset (or load the bundled sample), pinpoint high-risk talent,
-            explore lookalike employees, and request Gemini-powered retention plays in one streamlined workflow.
+            Upload the <em>HR-Employee-Attrition</em> dataset (or load the bundled sample), pinpoint high-risk talent,
+            explore employee attrition insights, and request AI-powered retention plays in one streamlined workflow.
           </p>
         </header>
 
@@ -383,7 +397,7 @@ export default function HomePage() {
             <header className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-xl font-semibold text-slate-900">3. Insights</h2>
               <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
-                Ready for Gemini
+                Ready for AI
               </span>
             </header>
 
@@ -442,21 +456,150 @@ export default function HomePage() {
                 disabled={isGenerating}
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition enabled:hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
-                {isGenerating ? 'Generating with Gemini…' : 'Generate retention strategies'}
+                {isGenerating ? 'Generating with XAI, AI, HRM…' : 'Generate retention strategies'}
               </button>
           </div>
         </section>
       )}
 
-        {strategies && (
+        {(strategyItems?.length || strategies) && (
           <section className="grid gap-4 rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 via-slate-50 to-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-indigo-900">4. Gemini recommendations</h2>
-            <div className="whitespace-pre-wrap rounded-xl border border-indigo-100 bg-white/90 px-4 py-4 text-sm leading-relaxed text-slate-800 shadow-inner">
-              {strategies}
+            <h2 className="text-xl font-semibold text-indigo-900">4. AI recommendations</h2>
+            {strategyItems?.length ? (
+              <StrategyChart items={strategyItems} />
+            ) : (
+              <div className="whitespace-pre-wrap rounded-xl border border-indigo-100 bg-white/90 px-4 py-4 text-sm leading-relaxed text-slate-800 shadow-inner">
+                {strategies}
           </div>
+            )}
         </section>
       )}
     </div>
     </main>
+  );
+}
+
+const strategyPalette = [
+  {
+    text: 'text-sky-900',
+    gradient: 'from-sky-50 via-sky-100 to-white',
+    bar: 'bg-sky-500',
+    badge: 'bg-sky-100 text-sky-700',
+  },
+  {
+    text: 'text-emerald-900',
+    gradient: 'from-emerald-50 via-emerald-100 to-white',
+    bar: 'bg-emerald-500',
+    badge: 'bg-emerald-100 text-emerald-700',
+  },
+  {
+    text: 'text-amber-900',
+    gradient: 'from-amber-50 via-amber-100 to-white',
+    bar: 'bg-amber-500',
+    badge: 'bg-amber-100 text-amber-700',
+  },
+  {
+    text: 'text-indigo-900',
+    gradient: 'from-indigo-50 via-indigo-100 to-white',
+    bar: 'bg-indigo-500',
+    badge: 'bg-indigo-100 text-indigo-700',
+  },
+] as const;
+
+const parseStrategies = (text: string): StrategyItem[] => {
+  if (!text.trim()) return [];
+  const pattern = /(?:^|\n)\s*(\d+)[\.\)]\s*(.*?)(?=(?:\n\s*\d+[\.\)])|$)/gs;
+  const items: StrategyItem[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    const order = Number(match[1]);
+    const body = match[2].trim();
+    if (!body) continue;
+    const segments = body.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+    const [headline, ...rest] = segments;
+    const label = headline ?? `Strategy ${order}`;
+    items.push({
+      order,
+      label,
+      lines: rest.length ? rest : [],
+      score: label.length + rest.join(' ').length,
+    });
+  }
+
+  return items;
+};
+
+function StrategyChart({ items }: { items: StrategyItem[] }) {
+  const paletteLength = strategyPalette.length;
+  const maxScore = Math.max(...items.map((item) => item.score), 1);
+
+  return (
+    <div className="grid gap-6">
+      <div className="rounded-2xl border border-indigo-100 bg-white p-6 shadow-inner">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h3 className="text-base font-semibold text-slate-800">Impact comparison</h3>
+          <span className="text-xs uppercase tracking-wide text-slate-500">
+            Relative length = narrative depth
+          </span>
+        </div>
+        <div className="mt-4 grid gap-4">
+          {items.map((item, index) => {
+            const palette = strategyPalette[index % paletteLength];
+            const barWidth = Math.max(10, Math.round((item.score / maxScore) * 100));
+            return (
+              <div key={item.order} className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+                    <span className={`rounded-full px-2 py-1 text-xs font-semibold uppercase ${palette.badge}`}>
+                      {item.order}
+                    </span>
+                    <span className="leading-tight">{item.label}</span>
+                  </div>
+                  <span className={`text-xs font-medium ${palette.text}`}>{barWidth}%</span>
+                </div>
+                <div className="h-3 w-full overflow-hidden rounded-full bg-slate-200/70">
+                  <div
+                    className={`h-full rounded-full ${palette.bar}`}
+                    style={{ width: `${barWidth}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid gap-5 md:grid-cols-2">
+        {items.map((item, index) => {
+          const palette = strategyPalette[index % paletteLength];
+          return (
+            <div
+              key={`detail-${item.order}`}
+              className={`rounded-2xl border border-white/70 bg-gradient-to-br p-5 shadow-sm ${palette.gradient} ${palette.text}`}
+            >
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-base font-semibold text-slate-700 shadow-inner">
+                  {item.order}
+                </span>
+                <div className="space-y-2 text-sm text-slate-700">
+                  <h3 className="text-base font-semibold text-slate-800">{item.label}</h3>
+                  {item.lines.length > 0 && (
+                    <ul className="grid gap-2 text-sm leading-relaxed text-slate-700">
+                      {item.lines.map((line, idx) => (
+                        <li key={idx} className="flex gap-2">
+                          <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-400/70" />
+                          <span>{line}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

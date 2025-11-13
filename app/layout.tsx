@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HR Analytics & Retention Co-Pilot",
+  title: "Employee Retention Strategies and Analysis Platform Co-Pilot",
   description:
     "Upload the WA_Fn-UseC_-HR-Employee-Attrition dataset, explore attrition insights, and craft personalized retention strategies with Gemini.",
   icons: {
