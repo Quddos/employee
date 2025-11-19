@@ -12,6 +12,7 @@ Explainable AI and Model Training: https://github.com/Quddos/Employee_retention_
 The Employee Retention Prediction System enables HR professionals to make evidence-based workforce decisions by analyzing employee attributes and predicting their likelihood to stay or leave.
 
 <img width="1350" height="966" alt="image" src="https://github.com/user-attachments/assets/c1bba79b-55ae-4094-8f9f-4b89a7f19c9a" />
+<img width="935" height="875" alt="image" src="https://github.com/user-attachments/assets/ec29367b-48f2-4b3e-9a73-fe9ca2a01da2" />
 
 
 ### Features
