@@ -1,6 +1,18 @@
 ## HR Analytics & Retention Strategy App
 
 Full-stack Next.js (App Router) demo for exploring the Kaggle **WA_Fn-UseC_-HR-Employee-Attrition** dataset, surfacing attrition insights for any employee, and generating targeted retention actions with Google Gemini.
+# Employee_retention_strategy_suggestion
+🧠 Employee Retention Prediction System (AI-Powered HRM)  Intelligent HR Decision Support System for predicting employee retention using Machine Learning, Explainable AI (SHAP), and a Progressive Web App (PWA) interface built with Next.js. Developed to empower HR departments with data-driven insights and actionable retention strategies.
+
+🚀 Overview
+Project Link: https://employeeretention.qudmeet.click/
+PWA application code: https://github.com/Quddos/employee
+Explainable AI and Model Training: https://github.com/Quddos/Employee_retention_strategy_suggestion
+
+The Employee Retention Prediction System enables HR professionals to make evidence-based workforce decisions by analyzing employee attributes and predicting their likelihood to stay or leave.
+
+<img width="1350" height="966" alt="image" src="https://github.com/user-attachments/assets/c1bba79b-55ae-4094-8f9f-4b89a7f19c9a" />
+
 
 ### Features
 
@@ -9,6 +21,8 @@ Full-stack Next.js (App Router) demo for exploring the Kaggle **WA_Fn-UseC_-HR-E
 - `/api/analyze` computes dataset stats, attrition by department, and k-nearest numeric neighbors.
 - `/api/generate` crafts a structured prompt and calls Gemini (`@google/generative-ai`) for 3 actionable retention strategies.
 - Frontend presents summaries, similar employees, and Gemini guidance in a clean, responsive layout.
+
+
 
 ### Prerequisites
 
