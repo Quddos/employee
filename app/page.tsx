@@ -556,13 +556,9 @@ function StrategyChart({ items }: { items: StrategyItem[] }) {
                     </span>
                     <span className="leading-tight">{item.label}</span>
                   </div>
-                  <span className={`text-xs font-medium ${palette.text}`}>{barWidth}%</span>
                 </div>
-                <div className="h-3 w-full overflow-hidden rounded-full bg-slate-200/70">
-                  <div
-                    className={`h-full rounded-full ${palette.bar}`}
-                    style={{ width: `${barWidth}%` }}
-                  />
+                <div className="h-2 w-full">
+                  <div className={`${palette.bar} h-full w-full`} />
                 </div>
               </div>
             );
