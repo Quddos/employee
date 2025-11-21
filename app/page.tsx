@@ -566,7 +566,7 @@ function StrategyChart({ items }: { items: StrategyItem[] }) {
         </div>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-3">
         {items.map((item, index) => {
           const palette = strategyPalette[index % paletteLength];
           return (
@@ -582,10 +582,10 @@ function StrategyChart({ items }: { items: StrategyItem[] }) {
                   <h3 className="text-base font-semibold text-slate-800">{item.label}</h3>
                   {item.lines.length > 0 && (
                     <ul className="grid gap-2 text-sm leading-relaxed text-slate-700">
-                      {item.lines.map((line, idx) => (
+                      {item.lines.slice(0, 2).map((line, idx) => (
                         <li key={idx} className="flex gap-2">
                           <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-400/70" />
-                          <span>{line}</span>
+                          <span>{line.length > 140 ? `${line.slice(0, 137)}...` : line}</span>
                         </li>
                       ))}
                     </ul>
