@@ -582,10 +582,10 @@ function StrategyChart({ items }: { items: StrategyItem[] }) {
                   <h3 className="text-base font-semibold text-slate-800">{item.label}</h3>
                   {item.lines.length > 0 && (
                     <ul className="grid gap-2 text-sm leading-relaxed text-slate-700">
-                      {item.lines.slice(0, 2).map((line, idx) => (
+                      {item.lines.map((line, idx) => (
                         <li key={idx} className="flex gap-2">
                           <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-400/70" />
-                          <span>{line.length > 140 ? `${line.slice(0, 137)}...` : line}</span>
+                          <span>{line}</span>
                         </li>
                       ))}
                     </ul>
