@@ -538,10 +538,10 @@ function StrategyChart({ items }: { items: StrategyItem[] }) {
     <div className="grid gap-6">
       <div className="rounded-2xl border border-indigo-100 bg-white p-6 shadow-inner">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-base font-semibold text-slate-800">Impact comparison</h3>
+          {/* <h3 className="text-base font-semibold text-slate-800">Impact comparison</h3>
           <span className="text-xs uppercase tracking-wide text-slate-500">
             Relative length = narrative depth
-          </span>
+          </span> */}
         </div>
         <div className="mt-4 grid gap-4">
           {items.map((item, index) => {
